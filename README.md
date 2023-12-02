@@ -23,3 +23,8 @@ docker-compose up -d
 ```
 
 * Make sure to replace <MY_OPERATOR_PASSWORD> with your actual operator password. Additionally, ensure that you have Docker and Docker Compose installed before running the commands.
+
+### creators
+created in tandem and with ideological support
+https://github.com/goooodnes
+https://github.com/kertio
