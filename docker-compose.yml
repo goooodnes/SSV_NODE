@@ -1,0 +1,156 @@
+version: "3.8"
+
+# Override any defaults specified by `${FOO:-bar}` in `.env` with `FOO=qux`.
+# ${VARIABLE:-default} evaluates to default if VARIABLE is unset or empty in the environment.
+# ${VARIABLE-default} evaluates to default only if VARIABLE is unset in the environment.
+
+services:
+
+  ssv:
+    image: bloxstaking/ssv-node:latest
+    ports:
+      - 13001:13001
+      - 12001:12001/udp
+      - 15000:15000
+    command:
+        /go/bin/ssvnode start-node
+    networks: [dvnode]
+    volumes:
+      - ./config.yaml:/config/config.yaml
+      - ./:/opt/data
+      - ./password:/password
+      - ./encrypted_private_key.json:/encrypted_private_key.json
+    restart: unless-stopped
+  
+  
+  #             _   _
+  #   __ _  ___| |_| |__
+  #  / _` |/ _ \ __| '_ \
+  # | (_| |  __/ |_| | | |
+  #  \__, |\___|\__|_| |_|
+  #  |___/
+
+  geth:
+    image: ethereum/client-go:latest
+    ports:
+      - ${GETH_PORT_P2P:-31303}:30303/tcp # P2P TCP
+      - ${GETH_PORT_P2P:-31303}:30303/udp # P2P UDP
+      - 8775:8545
+      - 8561:8551
+      - 6123:6060
+      - 8777:8546
+    command: |
+      --holesky
+      --http
+      --http.addr=0.0.0.0
+      --http.port=8545
+      --http.vhosts="*"
+      --ws 
+      --ws.addr 0.0.0.0 
+      --ws.port 8546
+      --http.api="db,eth,net,engine,rpc,web3"
+      --authrpc.jwtsecret="/root/jwt/jwt.hex"
+      --authrpc.addr=0.0.0.0
+      --authrpc.port=8551
+      --authrpc.vhosts="*"
+      --metrics
+      --metrics.addr=0.0.0.0
+      --metrics.port=6060
+      --bootnodes "enode://ac906289e4b7f12df423d654c5a962b6ebe5b3a74cc9e06292a85221f9a64a6f1cfdd6b714ed6dacef51578f92b34c60ee91e9ede9c7f8fadc4d347326d95e2b@146.190.13.128:30303","enode://a3435a0155a3e837c02f5e7f5662a2f1fbc25b48e4dc232016e1c51b544cb5b4510ef633ea3278c0e970fa8ad8141e2d4d0f9f95456c537ff05fdf9b31c15072@178.128.136.233:30303"
+    networks: [dvnode]
+    volumes:
+      - ./data/geth:/root/.ethereum
+      - ./jwt:/root/jwt
+    restart: unless-stopped
+
+
+    
+  #  _ _       _     _   _
+  # | (_) __ _| |__ | |_| |__   ___  _   _ ___  ___
+  # | | |/ _` | '_ \| __| '_ \ / _ \| | | / __|/ _ \
+  # | | | (_| | | | | |_| | | | (_) | |_| \__ \  __/
+  # |_|_|\__, |_| |_|\__|_| |_|\___/ \__,_|___/\___|
+  #      |___/
+
+  lighthouse:
+    image: sigp/lighthouse:latest
+    ports:
+      - ${LIGHTHOUSE_PORT_P2P:-9100}:9000/tcp   # P2P TCP
+      - ${LIGHTHOUSE_PORT_P2P:-9100}:9000/udp   # P2P UDP
+      - 5062:5052
+      - 5054:5054
+      - 18550:18550
+    command: |
+      lighthouse bn
+      --network=holesky
+      --checkpoint-sync-url=https://holesky.beaconstate.info
+      --execution-endpoint=http://geth:8551
+      --execution-jwt=/opt/jwt/jwt.hex
+      --datadir=/opt/app/beacon/
+      --builder=http://mev-boost:18550
+      --http
+      --http-address=0.0.0.0
+      --http-port=5052
+      --metrics
+      --metrics-address=0.0.0.0
+      --metrics-port=5054
+      --metrics-allow-origin="*"
+    networks: [dvnode]
+    volumes:
+      - ./data/lighthouse:/opt/app/beacon
+      - ./jwt:/opt/jwt
+    restart: unless-stopped
+ 
+
+
+  #      _                     _
+  #  _ __ ___   _____   __    | |__   ___   ___  ___| |_
+  #  | '_ ` _ \ / _ \ \ / /____| '_ \ / _ \ / _ \/ __| __|
+  #  | | | | | |  __/\ V /_____| |_) | (_) | (_) \__ \ |_
+  #  |_| |_| |_|\___| \_/      |_.__/ \___/ \___/|___/\__|
+  mev-boost:
+    image: flashbots/mev-boost:1.6.1a1
+    networks: [dvnode]
+    command: |
+      -holesky 
+      -loglevel=debug
+      -addr=0.0.0.0:18550
+      -relay-check
+      -relay https://0xafa4c6985aa049fb79dd37010438cfebeb0f2bd42b115b89dd678dab0670c1de38da0c4e9138c9290a398ecd9a0b3110@boost-relay-holesky.flashbots.net
+      -relay https://0xaa58208899c6105603b74396734a6263cc7d947f444f396a90f7b7d3e65d102aec7e5e5291b27e08d02c50a050825c2f@holesky.titanrelay.xyz
+      -relay https://0xb1d229d9c21298a87846c7022ebeef277dfc321fe674fa45312e20b5b6c400bfde9383f801848d7837ed5fc449083a12@relay-holesky.edennetwork.io
+    restart: unless-stopped
+
+  #                        _ _             _
+  #  _ __ ___   ___  _ __ (_) |_ ___  _ __(_)_ __   __ _
+  # | '_ ` _ \ / _ \| '_ \| | __/ _ \| '__| | '_ \ / _` |
+  # | | | | | | (_) | | | | | || (_) | |  | | | | | (_| |
+  # |_| |_| |_|\___/|_| |_|_|\__\___/|_|  |_|_| |_|\__, |
+  #                                                |___/
+
+  prometheus:
+    image: prom/prometheus:latest
+    user: ":"
+    networks: [dvnode]
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./data/prometheus:/prometheus
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:${GRAFANA_VERSION:-10.0.3}
+    user: ":"
+    ports:
+      - ${MONITORING_PORT_GRAFANA:-3010}:3000
+    networks: [dvnode]
+    volumes:
+      - ./grafana/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
+      - ./grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/datasource.yml
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini:ro
+      - ./grafana/dashboards:/etc/dashboards
+      - ./data/grafana:/var/lib/grafana
+    restart: unless-stopped
+
+
+networks:
+  dvnode:
