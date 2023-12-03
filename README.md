@@ -31,6 +31,7 @@ docker-compose up -d
 * Make sure to replace <MY_OPERATOR_PASSWORD> with your actual operator password. Additionally, ensure that you have Docker and Docker Compose installed before running the commands.
 
 ### Launch DKG ceremony:
+All operators must join the ceremony for successful completion. The wait may take a long time, so run DKG in __screen__ or __tmux__.
 ```
 docker run --restart unless-stopped --name ssv_dkg -p 3030:3030 -v "$HOME/SSV_NODE":/data -it "bloxstaking/ssv-dkg:latest" /app start-operator --configPath /data/operator.yaml
 ```
