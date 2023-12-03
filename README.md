@@ -1,9 +1,9 @@
-## SVV_NODE
-This repository contains instructions for setting up the SVV_NODE environment.
+## SSV_NODE
+This repository contains instructions for setting up the SSV_NODE environment.
 
 ### Clone the repository:
 ```
-git clone https://github.com/goooodnes/SVV_NODE.git
+git clone https://github.com/goooodnes/SSV_NODE.git
 cd SSV_NODE
 ```
 
