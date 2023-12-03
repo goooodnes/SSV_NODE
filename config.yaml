@@ -1,4 +1,4 @@
-lobal:
+global:
   # Console output log level
   LogLevel: info
 
