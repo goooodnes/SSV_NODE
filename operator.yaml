@@ -1,0 +1,8 @@
+privKey: /data/encrypted_private_key.json
+privKeyPassword: /data/password
+port: 3030
+storeShare: true
+logLevel: info
+logFormat: json
+logLevelFormat: capitalColor
+logFilePath: /data/debug.log
