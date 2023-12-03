@@ -7,6 +7,12 @@ git clone https://github.com/goooodnes/SVV_NODE.git
 cd SSV_NODE
 ```
 
+Alternative chekpoint if standart checkpoint is blocked
+```
+lighthouse:
+  --checkpoint-sync-url=https://checkpoint-sync.holesky.ethpandaops.io/
+```
+
 ### Create a password file:
 ```
 echo "<MY_OPERATOR_PASSWORD>" >> password
