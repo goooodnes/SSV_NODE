@@ -111,7 +111,7 @@ services:
   mev-boost:
     image: flashbots/mev-boost:1.6.1a1
     networks: [dvnode]
-    command: |
+    command:
       -holesky 
       -loglevel=debug
       -addr=0.0.0.0:18550
