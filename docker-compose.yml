@@ -7,7 +7,7 @@ version: "3.8"
 services:
 
   ssv:
-    image: bloxstaking/ssv-node:latest
+    image: bloxstaking/ssv-node:v1.2.2
     ports:
       - 13001:13001
       - 12001:12001/udp
